@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVE Industry Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00ff88;
+        }
+        
+        .header h1 {
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .last-updated {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.jf {
+            border-left: 4px solid #00ccff;
+        }
+        
+        .stat-card.industry {
+            border-left: 4px solid #ff9500;
+        }
+        
+        .stat-card.pi {
+            border-left: 4px solid #00ff88;
+        }
+        
+        .stat-card.contracts {
+            border-left: 4px solid #ff00ff;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #aaa;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.jf .stat-value {
+            color: #00ccff;
+        }
+        
+        .stat-card.industry .stat-value {
+            color: #ff9500;
+        }
+        
+        .stat-card.pi .stat-value {
+            color: #00ff88;
+        }
+        
+        .stat-card.contracts .stat-value {
+            color: #ff00ff;
+        }
+        
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .section.jf .section-title {
+            color: #00ccff;
+        }
+        
+        .section.industry .section-title {
+            color: #ff9500;
+        }
+        
+        .section.pi .section-title {
+            color: #00ff88;
+        }
+        
+        .section.contracts .section-title {
+            color: #ff00ff;
+        }
+        
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: 12px;
+            color: #888;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        
+        .data-table td {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        
+        .status-building {
+            background: rgba(0, 204, 255, 0.2);
+            color: #00ccff;
+        }
+        
+        .status-active {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        
+        .status-completed {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+        
+        .id-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .profit-positive {
+            color: #00ff88;
+        }
+        
+        .profit-negative {
+            color: #ff4444;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #00ccff;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .price-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            width: 120px;
+            font-family: monospace;
+        }
+        
+        .price-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        .save-btn {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .save-btn:hover {
+            background: #00cc6a;
+        }
+        
+        .price-diff {
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        .price-diff.positive {
+            color: #00ff88;
+        }
+        
+        .price-diff.negative {
+            color: #ff4444;
+        }
+        
+        .section.market .section-title {
+            color: #ffd700;
+        }
+        
+        .section.market {
+            border-left: 4px solid #ffd700;
+        }
+        
+        .market-selector {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .bulk-update {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .bulk-update h4 {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .bulk-btn {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .bulk-btn:hover {
+            background: rgba(255, 193, 7, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 EVE Industry Dashboard</h1>
+        <div class="last-updated">
+            <span class="live-indicator"></span>
+            Last Updated: <span id="last-updated">Never</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card jf">
+                <div class="stat-label">JF Contracts Pending</div>
+                <div class="stat-value" id="stat-jf-pending">-</div>
+            </div>
+            <div class="stat-card jf">
+                <div class="stat-label">JF In Progress</div>
+                <div class="stat-value" id="stat-jf-active">-</div>
+            </div>
+            <div class="stat-card industry">
+                <div class="stat-label">Industry Jobs Pending</div>
+                <div class="stat-value" id="stat-jobs-pending">-</div>
+            </div>
+            <div class="stat-card industry">
+                <div class="stat-label">Industry Building</div>
+                <div class="stat-value" id="stat-jobs-building">-</div>
+            </div>
+            <div class="stat-card pi">
+                <div class="stat-label">PI Colonies</div>
+                <div class="stat-value" id="stat-pi-colonies">-</div>
+            </div>
+            <div class="stat-card pi">
+                <div class="stat-label">PI Daily Profit</div>
+                <div class="stat-value" id="stat-pi-daily">-</div>
+            </div>
+            <div class="stat-card contracts">
+                <div class="stat-label">Active Contracts</div>
+                <div class="stat-value" id="stat-contracts">-</div>
+            </div>
+            <div class="stat-card contracts">
+                <div class="stat-label">Contract Value</div>
+                <div class="stat-value" id="stat-contract-value">-</div>
+            </div>
+        </div>
+        
+        <!-- Market Prices Section -->
+        <div class="section" style="margin-bottom: 30px; background: rgba(0, 0, 0, 0.3);">
+            <div class="section-header">
+                <div class="section-title">💰 Market Pricing</div>
+                <button class="refresh-btn" onclick="loadPrices()">Refresh</button>
+            </div>
+            <div id="pricing-info" style="padding: 20px;">
+                <div class="loading">Loading pricing data...</div>
+            </div>
+        </div>
+        
+        <!-- Detailed Sections -->
+        <div class="sections-grid">
+            <!-- JF Contracts -->
+            <div class="section jf">
+                <div class="section-header">
+                    <div class="section-title">📦 Jump Freighter Contracts</div>
+                    <button class="refresh-btn" onclick="loadJFContracts()">Refresh</button>
+                </div>
+                <div id="jf-contracts-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Industry Jobs -->
+            <div class="section industry">
+                <div class="section-header">
+                    <div class="section-title">🏭 Industry Jobs</div>
+                    <button class="refresh-btn" onclick="loadIndustryJobs()">Refresh</button>
+                </div>
+                <div id="industry-jobs-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- PI Colonies -->
+            <div class="section pi">
+                <div class="section-header">
+                    <div class="section-title">🌍 PI Colonies</div>
+                    <button class="refresh-btn" onclick="loadPIColonies()">Refresh</button>
+                </div>
+                <div id="pi-colonies-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Active Contracts -->
+            <div class="section contracts">
+                <div class="section-header">
+                    <div class="section-title">📜 Active Contracts</div>
+                    <button class="refresh-btn" onclick="loadContracts()">Refresh</button>
+                </div>
+                <div id="contracts-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Format ISK numbers
+        function formatISK(num) {
+            if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toLocaleString();
+        }
+        
+        // Format time
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+        
+        // Update last updated time
+        function updateTimestamp() {
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        }
+        
+        // Load Stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('stat-jf-pending').textContent = stats.jf_pending;
+                document.getElementById('stat-jf-active').textContent = stats.jf_completed;
+                document.getElementById('stat-jobs-pending').textContent = stats.jobs_active;
+                document.getElementById('stat-jobs-building').textContent = stats.jobs_active;
+                document.getElementById('stat-pi-colonies').textContent = stats.pi_colonies;
+                document.getElementById('stat-pi-daily').textContent = formatISK(stats.pi_daily) + ' ISK';
+                document.getElementById('stat-contracts').textContent = stats.contracts_active;
+                document.getElementById('stat-contract-value').textContent = formatISK(stats.contract_value) + ' ISK';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load JF Contracts
+        async function loadJFContracts() {
+            try {
+                const response = await fetch('/api/jf-contracts');
+                const contracts = await response.json();
+                
+                const container = document.getElementById('jf-contracts-list');
+                
+                if (contracts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No JF contracts found</div>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr><th>ID</th><th>Route</th><th>Volume</th><th>Price</th><th>Status</th></tr></thead><tbody>';
+                
+                contracts.forEach(contract => {
+                    const statusClass = {
+                        'pending': 'status-pending',
+                        'in_progress': 'status-building',
+                        'completed': 'status-completed'
+                    }[contract.status] || 'status-pending';
+                    
+                    html += `
+                        <tr>
+                            <td><span class="id-badge">#${contract.id}</span></td>
+                            <td>${contract.origin} → ${contract.destination}</td>
+                            <td>${contract.volume_m3.toLocaleString()} m³</td>
+                            <td>${formatISK(contract.price)} ISK</td>
+                            <td><span class="status-badge ${statusClass}">${contract.status}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading JF contracts:', error);
+            }
+        }
+        
+        // Load Industry Jobs
+        async function loadIndustryJobs() {
+            try {
+                const response = await fetch('/api/industry-jobs');
+                const jobs = await response.json();
+                
+                const container = document.getElementById('industry-jobs-list');
+                
+                if (jobs.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No industry jobs found</div>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Cost</th><th>Status</th></tr></thead><tbody>';
+                
+                jobs.forEach(job => {
+                    const statusClass = {
+                        'pending': 'status-pending',
+                        'building': 'status-building',
+                        'completed': 'status-completed',
+                        'sold': 'status-completed'
+                    }[job.status] || 'status-pending';
+                    
+                    html += `
+                        <tr>
+                            <td><span class="id-badge">#${job.id}</span></td>
+                            <td>${job.product_name}</td>
+                            <td>${job.quantity.toLocaleString()}</td>
+                            <td>${formatISK(job.material_cost)} ISK</td>
+                            <td><span class="status-badge ${statusClass}">${job.status}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading industry jobs:', error);
+            }
+        }
+        
+        // Load PI Colonies
+        async function loadPIColonies() {
+            try {
+                const response = await fetch('/api/pi-colonies');
+                const colonies = await response.json();
+                
+                const container = document.getElementById('pi-colonies-list');
+                
+                if (colonies.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No PI colonies found</div>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr><th>ID</th><th>Planet</th><th>Type</th><th>System</th><th>Daily Profit</th></tr></thead><tbody>';
+                
+                colonies.forEach(colony => {
+                    html += `
+                        <tr>
+                            <td><span class="id-badge">#${colony.id}</span></td>
+                            <td>${colony.planet_name}</td>
+                            <td>${colony.planet_type}</td>
+                            <td>${colony.system}</td>
+                            <td class="profit-positive">${formatISK(colony.daily_profit)} ISK</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading PI colonies:', error);
+            }
+        }
+        
+        // Load Contracts
+        async function loadContracts() {
+            try {
+                const response = await fetch('/api/contracts');
+                const contracts = await response.json();
+                
+                const container = document.getElementById('contracts-list');
+                
+                if (contracts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No active contracts</div>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr><th>ID</th><th>Type</th><th>Item</th><th>Qty</th><th>Price</th><th>Station</th></tr></thead><tbody>';
+                
+                contracts.forEach(contract => {
+                    html += `
+                        <tr>
+                            <td><span class="id-badge">#${contract.id}</span></td>
+                            <td><span class="status-badge ${contract.contract_type === 'buy' ? 'status-pending' : 'status-active'}">${contract.contract_type.toUpperCase()}</span></td>
+                            <td>${contract.item_name}</td>
+                            <td>${contract.quantity.toLocaleString()}</td>
+                            <td>${formatISK(contract.price_per_unit)} ISK</td>
+                            <td>${contract.station}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading contracts:', error);
+            }
+        }
+        
+        // Load Prices
+        async function loadPrices() {
+            try {
+                const response = await fetch('/api/prices');
+                const data = await response.json();
+                
+                const container = document.getElementById('pricing-info');
+                
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">';
+                
+                // Show each location
+                for (const [location, info] of Object.entries(data.locations)) {
+                    const isNullsec = info.type === 'nullsec';
+                    const discountText = isNullsec ? `(-${(info.markdown * 100).toFixed(0)}% local markdown)` : '';
+                    const markupText = isNullsec ? `(+${(info.import_markup * 100).toFixed(0)}% import markup)` : '';
+                    
+                    html += `
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; border-left: 4px solid ${isNullsec ? '#00ff88' : '#00ccff'};">
+                            <h3 style="margin-bottom: 10px; color: ${isNullsec ? '#00ff88' : '#00ccff'};">${location}</h3>
+                            ${isNullsec ? `
+                                <p style="font-size: 0.9em; margin-bottom: 8px;">✅ <strong>Local Buy:</strong> ${discountText}</p>
+                                <p style="font-size: 0.9em; margin-bottom: 8px;">📦 <strong>Import from Jita:</strong> ${markupText}</p>
+                                <p style="font-size: 0.85em; color: #aaa;">Buying locally saves you money!</p>
+                            ` : `
+                                <p style="font-size: 0.9em; margin-bottom: 8px;">📍 <strong>Base Price Reference</strong></p>
+                                <p style="font-size: 0.85em; color: #aaa;">All other locations compared to Jita</p>
+                            `}
+                            <div style="margin-top: 10px; font-size: 0.85em;">
+                                <p><strong>Sample Prices:</strong></p>
+                                <p>Tritanium: ${info.local['Tritanium'].toLocaleString()} ISK</p>
+                                <p>Pyerite: ${info.local['Pyerite'].toLocaleString()} ISK</p>
+                                <p>Mexallon: ${info.local['Mexallon'].toLocaleString()} ISK</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                html += `<p style="margin-top: 15px; color: #888; font-size: 0.85em;">Last updated: ${new Date(data.last_updated).toLocaleString()}</p>`;
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading prices:', error);
+                document.getElementById('pricing-info').innerHTML = '<p style="color: #ff4444;">Error loading pricing data</p>';
+            }
+        }
+        
+        // Load all data
+        function loadAllData() {
+            loadStats();
+            loadPrices();
+            loadJFContracts();
+            loadIndustryJobs();
+            loadPIColonies();
+            loadContracts();
+            updateTimestamp();
+        }
+        
+        // Initial load
+        loadAllData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadAllData, 30000);
+    </script>
+</body>
+</html>
