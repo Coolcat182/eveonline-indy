@@ -1,0 +1,21 @@
+import jf from './jf';
+import industry from './industry';
+import pi from './pi';
+import market from './market';
+import profit from './profit';
+import help from './help';
+import trading from './trading';
+import character from './character';
+import materials from './materials';
+import config from './config';
+import blueprint from './blueprint';
+import piproducts from './piproducts';
+import shopping from './shopping';
+import analyze from './analyze';
+import settings from './settings';
+import plex from './plex';
+import piregions from './piregions';
+import bpodb from './bpodb';
+import contract from './contract';
+
+export const commands = [jf, industry, pi, market, profit, help, trading, character, materials, config, blueprint, piproducts, shopping, analyze, settings, plex, piregions, bpodb, contract];

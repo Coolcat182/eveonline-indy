@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVE Industry Services Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #aaa;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .status-item.offline {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+        }
+        
+        .status-label {
+            font-size: 0.9em;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+        
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-icon {
+            font-size: 2em;
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            color: #00ff88;
+        }
+        
+        .card-content {
+            line-height: 1.6;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .command-table th,
+        .command-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .command-table th {
+            color: #00ccff;
+            font-weight: 600;
+        }
+        
+        .command {
+            background: rgba(0, 204, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #00ccff;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1));
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .highlight-box h2 {
+            color: #00ff88;
+            margin-bottom: 15px;
+        }
+        
+        .discount-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .discount-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .discount-station {
+            font-weight: bold;
+            color: #00ccff;
+        }
+        
+        .discount-value {
+            font-size: 1.5em;
+            color: #00ff88;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            color: #888;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .setup-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+        }
+        
+        .setup-section h3 {
+            color: #00ccff;
+            margin-bottom: 20px;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            display: block;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 EVE Industry Services</h1>
+            <p class="subtitle">Discord Bot for WinterCo Industry, PI, JF & Trading</p>
+            
+            <div class="status-bar">
+                <div class="status-item offline">
+                    <div class="status-label">Bot Status</div>
+                    <div class="status-value">⚠️ OFFLINE</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Commands</div>
+                    <div class="status-value">19</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">BPOs in DB</div>
+                    <div class="status-value">130+</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">PI Regions</div>
+                    <div class="status-value">15</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="highlight-box">
+            <h2>💡 To Start the Bot</h2>
+            <p>Open PowerShell and run:</p>
+            <code>cd "C:\Users\michaelhutchison\Documents\coding projects\eve online"<br>npm install<br>npm run dev</code>
+            <p style="margin-top: 15px; color: #aaa;">Then visit: http://localhost:8080</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🏭</span>
+                    <h3 class="card-title">Industry & Manufacturing</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>Complete BPO database (130+ blueprints)</li>
+                        <li>Material calculations with ME (0-10)</li>
+                        <li>Build time with TE (0-20)</li>
+                        <li>Skill bonuses (Industry, Advanced Industry)</li>
+                        <li>Profit calculations per run</li>
+                        <li>Job tracking & completion</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🌍</span>
+                    <h3 class="card-title">Planetary Interaction</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>All 15 regions with PI data</li>
+                        <li>Pure Blind default (WinterCo)</li>
+                        <li>Planet type resources</li>
+                        <li>Best products by profit</li>
+                        <li>Colony management</li>
+                        <li>Max profit tier analysis</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🚀</span>
+                    <h3 class="card-title">Jump Freighter</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>JF shipping quotes</li>
+                        <li>Contract creation</li>
+                        <li>Rate calculations</li>
+                        <li>WinterCo hub support</li>
+                        <li>Volume & collateral tracking</li>
+                        <li>Statistics & history</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">💰</span>
+                    <h3 class="card-title">Trading & Imports</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>Jita → WinterCo import analysis</li>
+                        <li>Profit margin calculations</li>
+                        <li>Best items to import</li>
+                        <li>Sell order tracking</li>
+                        <li>Station flip calculator</li>
+                        <li>Material buying with discounts</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📜</span>
+                    <h3 class="card-title">Contracts</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>Create buy contracts (want to buy)</li>
+                        <li>Create sell contracts (want to sell)</li>
+                        <li>Search active contracts</li>
+                        <li>Station filtering</li>
+                        <li>Fulfill & cancel tracking</li>
+                        <li>Player-to-player trading</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🎫</span>
+                    <h3 class="card-title">PLEX & Store</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>PLEX store arbitrage</li>
+                        <li>ISK ↔ PLEX conversion</li>
+                        <li>PLEX → ISK cycle analysis</li>
+                        <li>Store items (MCT, extractors, injectors)</li>
+                        <li>Subscription cost calculator</li>
+                        <li>ROI analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h2>📍 WinterCo Location Discounts</h2>
+            <div class="discount-grid">
+                <div class="discount-item">
+                    <div class="discount-station">RD-G2R</div>
+                    <div class="discount-value">5%</div>
+                    <small>Industry Hub</small>
+                </div>
+                <div class="discount-item">
+                    <div class="discount-station">VA6-ED</div>
+                    <div class="discount-value">8%</div>
+                    <small>JF Hub</small>
+                </div>
+                <div class="discount-item">
+                    <div class="discount-station">D-PN</div>
+                    <div class="discount-value">10%</div>
+                    <small>Primary Hub</small>
+                </div>
+                <div class="discount-item">
+                    <div class="discount-station">Regional</div>
+                    <div class="discount-value">10-12%</div>
+                    <small>Other Stations</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 40px;">
+            <div class="card-header">
+                <span class="card-icon">⌨️</span>
+                <h3 class="card-title">All Commands (19 Total)</h3>
+            </div>
+            <div class="card-content">
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="command">/analyze</span></td>
+                            <td>Max profit analysis across all activities</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/bpodb</span></td>
+                            <td>BPO database with materials, build time, ME/TE calc</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/contract</span></td>
+                            <td>Buy/sell contracts between players</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/jf</span></td>
+                            <td>Jump Freighter quotes and contracts</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/industry</span></td>
+                            <td>Manufacturing job tracking and profit</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/pi</span></td>
+                            <td>PI colony management</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/piregions</span></td>
+                            <td>PI data for all 15 regions</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/piproducts</span></td>
+                            <td>PI product prices and best setups</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/trading</span></td>
+                            <td>Jita to WinterCo import analysis</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/market</span></td>
+                            <td>Jita price checks and margins</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/character</span></td>
+                            <td>Character skills and capabilities</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/materials</span></td>
+                            <td>Material buying with station discounts</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/shopping</span></td>
+                            <td>Shopping lists and PI schedules</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/blueprint</span></td>
+                            <td>Personal BPO/BPC tracking</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/config</span></td>
+                            <td>Settings (discounts, JF rates)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/profit</span></td>
+                            <td>Overall profit dashboard</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/plex</span></td>
+                            <td>PLEX store arbitrage and analysis</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/settings</span></td>
+                            <td>User preferences</td>
+                        </tr>
+                        <tr>
+                            <td><span class="command">/help</span></td>
+                            <td>Complete command reference</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="setup-section">
+            <h3>📋 Setup Instructions</h3>
+            <ol style="margin-left: 20px; line-height: 2;">
+                <li>Download and install <strong>Node.js</strong> from <a href="https://nodejs.org" style="color: #00ccff;">nodejs.org</a></li>
+                <li>Copy <code>.env.example</code> to <code>.env</code> and add your Discord bot token</li>
+                <li>Open PowerShell in the project folder</li>
+                <li>Run: <code>npm install</code></li>
+                <li>Run: <code>npm run register-commands</code> (one time)</li>
+                <li>Run: <code>npm run dev</code></li>
+                <li>Visit <code>http://localhost:8080</code> to see this dashboard live</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>WinterCo Industry Services - Pure Blind Region</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Built with ❤️ for maximum ISK generation</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -436,5 +436,49 @@ def jf_booking_page():
     conn.close()
     return render_template('jf_booking.html', rates=rates)
 
+# ============================================================
+# BPO TRACKING PAGE
+# ============================================================
+
+@app.route('/api/bpos')
+def api_bpos():
+    """Get all BPOs"""
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT * FROM blueprints ORDER BY name")
+    bpos = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return jsonify(bpos)
+
+@app.route('/api/bpos/create', methods=['POST'])
+def api_bpo_create():
+    """Add a new BPO"""
+    data = request.json
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""INSERT INTO blueprints (name, type_id, material_efficiency, time_efficiency, copy_count, original, location, owner, value, notes)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+              (data.get('name'), data.get('type_id'), data.get('material_efficiency', 0), 
+               data.get('time_efficiency', 0), data.get('copy_count', 1), data.get('original', 1),
+               data.get('location'), data.get('owner'), data.get('value', 0), data.get('notes')))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/api/bpos/<int:bpo_id>', methods=['DELETE'])
+def api_bpo_delete(bpo_id):
+    """Delete a BPO"""
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM blueprints WHERE id = ?", (bpo_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/bpos')
+def bpos_page():
+    """BPO tracking web interface"""
+    return render_template('bpos.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=80)

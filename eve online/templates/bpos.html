@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPO Tracker - WinterCo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 { color: #00d4ff; margin-bottom: 10px; }
+        .nav { margin-bottom: 20px; }
+        .nav a {
+            color: #00d4ff;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 16px;
+            background: rgba(0,212,255,0.1);
+            border-radius: 4px;
+        }
+        .nav a:hover { background: rgba(0,212,255,0.2); }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-section h2 { color: #00d4ff; margin-bottom: 15px; }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        input, select {
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            color: #eee;
+            border-radius: 4px;
+            flex: 1;
+        }
+        button {
+            padding: 10px 20px;
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #00b8e6; }
+        .bpo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .bpo-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .bpo-card h3 { color: #00d4ff; margin-bottom: 10px; }
+        .bpo-card p { margin: 5px 0; color: #aaa; }
+        .bpo-card .value { color: #4caf50; font-size: 1.2em; }
+        .bpo-card .delete {
+            background: #f44336;
+            color: white;
+            padding: 5px 10px;
+            margin-top: 10px;
+        }
+        .bpo-card .delete:hover { background: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📜 BPO Tracker</h1>
+            <p>WinterCo Blueprint Originals</p>
+        </div>
+        <div class="nav">
+            <a href="/">Dashboard</a>
+            <a href="/marketplace">Marketplace</a>
+            <a href="/jf-booking">JF Booking</a>
+            <a href="/bpos">BPOs</a>
+        </div>
+        
+        <div class="form-section">
+            <h2>Add New BPO</h2>
+            <div class="form-row">
+                <input type="text" id="bpoName" placeholder="Blueprint Name (e.g., Dominix Blueprint)">
+                <input type="number" id="bpoTypeId" placeholder="Type ID">
+                <input type="text" id="bpoLocation" placeholder="Location (e.g., RD-G2R)">
+            </div>
+            <div class="form-row">
+                <input type="number" id="bpoME" placeholder="ME Level" value="0">
+                <input type="number" id="bpoTE" placeholder="TE Level" value="0">
+                <input type="number" id="bpoValue" placeholder="ISK Value">
+                <select id="bpoOriginal">
+                    <option value="1">Original</option>
+                    <option value="0">Copy</option>
+                </select>
+            </div>
+            <button onclick="addBPO()">Add BPO</button>
+        </div>
+        
+        <div id="bpoList" class="bpo-grid"></div>
+    </div>
+    
+    <script>
+        async function loadBPOs() {
+            const response = await fetch('/api/bpos');
+            const bpos = await response.json();
+            const container = document.getElementById('bpoList');
+            container.innerHTML = bpos.map(bpo => `
+                <div class="bpo-card">
+                    <h3>${bpo.name}</h3>
+                    <p>Location: ${bpo.location || 'N/A'}</p>
+                    <p>ME: ${bpo.material_efficiency} | TE: ${bpo.time_efficiency}</p>
+                    <p>Type: ${bpo.original ? 'Original' : 'Copy'}</p>
+                    <p class="value">${bpo.value ? bpo.value.toLocaleString() + ' ISK' : 'N/A'}</p>
+                    <button class="delete" onclick="deleteBPO(${bpo.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+        
+        async function addBPO() {
+            await fetch('/api/bpos/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('bpoName').value,
+                    type_id: parseInt(document.getElementById('bpoTypeId').value) || null,
+                    location: document.getElementById('bpoLocation').value,
+                    material_efficiency: parseInt(document.getElementById('bpoME').value) || 0,
+                    time_efficiency: parseInt(document.getElementById('bpoTE').value) || 0,
+                    value: parseInt(document.getElementById('bpoValue').value) || 0,
+                    original: document.getElementById('bpoOriginal').value === '1'
+                })
+            });
+            loadBPOs();
+        }
+        
+        async function deleteBPO(id) {
+            if (confirm('Delete this BPO?')) {
+                await fetch('/api/bpos/' + id, {method: 'DELETE'});
+                loadBPOs();
+            }
+        }
+        
+        loadBPOs();
+    </script>
+</body>
+</html>
