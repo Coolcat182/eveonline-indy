@@ -481,4 +481,5 @@ def bpos_page():
     return render_template('bpos.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=80)
+    # Keep port consistent with README and typical local dev expectations.
+    app.run(debug=True, host='0.0.0.0', port=5000)

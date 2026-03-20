@@ -367,7 +367,7 @@ async def jf_quote(
     if 'error' in result:
         await interaction.response.send_message(
             f"❌ {result['error']}\n\n"
-            f"Available routes:\n" + "\n".join([f"• {r}" for r in result['available_routes']]),
+            f"Available systems:\n" + "\n".join([f"• {s}" for s in result['available_systems']]),
             ephemeral=True
         )
         return
